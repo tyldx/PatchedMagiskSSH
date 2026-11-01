@@ -78,25 +78,25 @@ mv $EXTRACT_TMP/* "$MODPATH/"
 # ── Cleanup temp dir ──────────────────────────────────────────────────
 rm -rf "$EXTRACT_TMP"
 
-# ── Step 8: Create binary symlinks via wrapper ────────────────────────
-ui_print "- Creating symlinks in /system/bin"
+# ── Step 8: Create launcher scripts in /system/bin ────────────────────
+# Regular files instead of symlinks: some mount backends (e.g. NoMount) skip symlinks.
+ui_print "- Creating launchers in /system/bin"
 for f in scp sftp sftp-server ssh ssh-keygen sshd sshd-session sshd-auth rsync; do
-  ln -sf /system/usr/libexec/ssh-core/wrapper "$MODPATH/system/bin/$f"
+  printf '#!/system/bin/sh\nexec env LD_LIBRARY_PATH=/system/usr/lib /system/usr/libexec/ssh-core/%s "$@"\n' "$f" > "$MODPATH/system/bin/$f"
 done
 
 # ── Step 9: Set permissions ───────────────────────────────────────────
 ui_print "- Setting permissions"
 set_perm_recursive "$MODPATH"                          0 0 0755 0644
 set_perm_recursive "$MODPATH/system/usr/libexec/ssh-core" 0 0 0755 0755
+set_perm_recursive "$MODPATH/system/bin"               0 2000 0755 0755
 set_perm           "$MODPATH/opensshd.init"            0 0 0755
 set_perm           "$MODPATH/*.sh"            0 0 0755
 # Make injected scripts executable
 [ -d "$MODPATH/scripts" ] && set_perm_recursive "$MODPATH/scripts" 0 0 0755 0755
 [ -f "$MODPATH/action.sh" ] && set_perm "$MODPATH/action.sh" 0 0 0755
 
-# Symlinks in /system/bin need proper SELinux context and ownership
-chcon -h u:object_r:system_file:s0 "$MODPATH/system/bin/"*
-chown -h root:shell "$MODPATH/system/bin/"*
+chcon u:object_r:system_file:s0 "$MODPATH/system/bin/"*
 
 ui_print "- Persistent data permissions"
 chown shell:shell /data/adb/ssh/shell /data/adb/ssh/shell/.ssh

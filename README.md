@@ -1,5 +1,7 @@
 # Patched-MagiskSSH
 
+> Fork of [powerAn2020/PatchedMagiskSSH](https://github.com/powerAn2020/PatchedMagiskSSH). Only change: `/system/bin` entries are regular scripts instead of symlinks, so the module works with NoMount.
+
 A Magisk / KernelSU module that bundles a modern OpenSSH server for Android, complete with a built-in WebUI for managing the service, SSH keys, and configuration — no terminal required.
 
 Built on top of [MagiskSSH](https://gitlab.com/d4rcm4rc/MagiskSSH) with the following patches applied:
@@ -92,7 +94,7 @@ $MODPATH/                   ← Module files (managed by Magisk/KernelSU)
 ├── opensshd.init           ← Service init script
 ├── service.sh              ← Boot-time autostart
 ├── action.sh               ← Action button handler
-├── system/bin/             ← Symlinks: ssh, sshd, scp, sftp, …
+├── system/bin/             ← Launcher scripts: ssh, sshd, scp, sftp, …
 ├── system/usr/libexec/ssh-core/   ← Real binaries + wrapper
 ├── webroot/                ← Built WebUI (injected at build time)
 └── scripts/                ← Management scripts (api.sh, …)
