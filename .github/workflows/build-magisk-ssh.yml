@@ -184,11 +184,15 @@ jobs:
           # Extract upstream information for creating our own update.json
           UPSTREAM_VERSION=$(grep "^version=" "$INJECT_DIR/module.prop" | cut -d'=' -f2)
           UPSTREAM_VCODE=$(grep "^versionCode=" "$INJECT_DIR/module.prop" | cut -d'=' -f2)
+          MODULE_VERSION="${UPSTREAM_VERSION}-r${GITHUB_RUN_NUMBER}"
+          MODULE_VCODE=$((UPSTREAM_VCODE * 1000 + GITHUB_RUN_NUMBER))
+          sed -i -e "s|^version=.*|version=${MODULE_VERSION}|" \
+                 -e "s|^versionCode=.*|versionCode=${MODULE_VCODE}|" "$INJECT_DIR/module.prop"
 
           cat <<EOF > "$GITHUB_WORKSPACE/magisk-ssh/build/update.json"
           {
-              "version": "${UPSTREAM_VERSION}",
-              "versionCode": ${UPSTREAM_VCODE},
+              "version": "${MODULE_VERSION}",
+              "versionCode": ${MODULE_VCODE},
               "zipUrl": "https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/Patched-MagiskSSH.zip",
               "changelog": "https://github.com/${GITHUB_REPOSITORY}/releases/latest"
           }
@@ -196,8 +200,8 @@ jobs:
           echo "Generated update.json for release."
 
           # Pass version info to the next steps for Release naming
-          echo "MODULE_VERSION=${UPSTREAM_VERSION}" >> $GITHUB_ENV
-          echo "MODULE_VCODE=${UPSTREAM_VCODE}" >> $GITHUB_ENV
+          echo "MODULE_VERSION=${MODULE_VERSION}" >> $GITHUB_ENV
+          echo "MODULE_VCODE=${MODULE_VCODE}" >> $GITHUB_ENV
 
           # Extract, patch, and re-inject opensshd.init
           mkdir -p "$INJECT_DIR/common"

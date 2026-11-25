@@ -32,6 +32,7 @@ jobs:
           UPSTREAM_VER=$(jq -r '.versionCode // 0' upstream.json)
           if [ "$LOCAL_HTTP_CODE" -eq 200 ]; then
             LOCAL_VER=$(jq -r '.versionCode // 0' local.json)
+            [ "$LOCAL_VER" -ge 1000 ] && LOCAL_VER=$((LOCAL_VER / 1000))
           else
             echo "Local release not found or unreachable. Defaulting local version to 0."
             LOCAL_VER=0
