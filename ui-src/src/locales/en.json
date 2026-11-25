@@ -26,7 +26,8 @@
         },
         "logs": {
             "title": "Real-time Logs",
-            "btn_clear": "Clear"
+            "btn_clear": "Clear",
+            "waiting": "Waiting for logs..."
         },
         "auth": {
             "title": "Authorized Keys",
@@ -34,7 +35,22 @@
             "btn_add": "Add Key",
             "btn_adding": "Adding...",
             "btn_delete": "Delete",
-            "empty": "No authorized keys found."
+            "empty": "No authorized keys found.",
+            "copied": "Copied",
+            "copy": "Copy"
+        },
+        "nav": {
+            "status": "Status",
+            "config": "Config",
+            "keys": "Keys",
+            "logs": "Logs"
+        },
+        "header": {
+            "debug_on": "Disable debug",
+            "debug_off": "Enable debug",
+            "to_light": "Light mode",
+            "to_dark": "Dark mode",
+            "language": "切换为中文"
         }
     }
 }

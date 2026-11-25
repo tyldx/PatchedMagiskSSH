@@ -2,7 +2,9 @@
     import { onMount } from "svelte";
     import { api } from "./ksu";
     import { _ } from "svelte-i18n";
-    import { Play, Square } from "lucide-svelte";
+    import { Button, Card, Icon, Switch } from "m3-svelte";
+    import iconPlay from "@ktibow/iconset-material-symbols/play-arrow-rounded";
+    import iconStop from "@ktibow/iconset-material-symbols/stop-rounded";
 
     let status = $state("");
     let isRunning = $state(false);
@@ -91,127 +93,77 @@
     });
 </script>
 
-<div
-    class="bg-white dark:bg-slate-900 shadow-sm rounded-xl p-6 border border-slate-200 dark:border-slate-800"
->
-    <h2 class="text-lg font-semibold mb-4">{$_("app.status.title")}</h2>
+<Card variant="filled">
+    <h2 class="m3-font-title-large mb-4">{$_("app.status.title")}</h2>
 
-    <div class="mt-4 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg space-y-2">
-        <!-- 第一行：指示灯 + 状态文字 + 按钮 -->
+    <div class="rounded-2xl bg-surface p-4 space-y-2">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div
                     class="w-3 h-3 rounded-full flex-shrink-0 {isRunning
-                        ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
-                        : 'bg-rose-500'}"
+                        ? 'bg-primary'
+                        : 'bg-error'}"
                 ></div>
-                <span class="font-medium">{status}</span>
+                <span class="m3-font-title-medium">{status}</span>
             </div>
 
-            <button
+            <Button
+                variant={isRunning ? "tonal" : "filled"}
+                iconType="full"
                 onclick={toggleService}
                 disabled={isToggling}
                 title={isRunning
                     ? $_("app.status.btn_stop")
                     : $_("app.status.btn_start")}
-                class="w-9 h-9 flex items-center justify-center rounded-full transition-colors disabled:opacity-50 {isRunning
-                    ? 'bg-rose-100 text-rose-600 hover:bg-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:hover:bg-rose-500/20'
-                    : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-500/20'}"
             >
-                {#if isRunning}
-                    <Square
-                        class="w-4 h-4"
-                        fill="currentColor"
-                        stroke-width="0"
-                    />
-                {:else}
-                    <Play
-                        class="w-4 h-4"
-                        fill="currentColor"
-                        stroke-width="0"
-                    />
-                {/if}
-            </button>
+                <Icon icon={isRunning ? iconStop : iconPlay} />
+            </Button>
         </div>
 
-        <!-- 第二行：IP / PID / Port 附加信息 -->
         {#if ip || (isRunning && pid)}
-            <div class="pl-6 flex flex-col gap-0.5">
+            <div class="pl-6 flex flex-col gap-0.5 m3-font-body-small text-on-surface-variant">
                 {#if ip}
-                    <span class="text-xs text-slate-400">IP: {ip}</span>
+                    <span>IP: {ip}</span>
                 {/if}
                 {#if isRunning && pid}
-                    <span class="text-xs text-slate-400">PID: {pid}</span>
-                    <span class="text-xs text-slate-400">Port: {port}</span>
+                    <span>PID: {pid}</span>
+                    <span>Port: {port}</span>
                 {/if}
             </div>
         {/if}
     </div>
 
-    <!-- 模块附加设置 (Autostart & Keep Data) -->
-    <div
-        class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-4"
-    >
-        <h3
-            class="text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2"
-        >
+    <div class="mt-4 pt-4 border-t border-outline-variant space-y-4">
+        <h3 class="m3-font-title-small text-primary">
             {$_("app.status.settings")}
         </h3>
 
-        <!-- 开机自启 -->
-        <div class="flex items-start justify-between">
+        <label class="flex items-center justify-between gap-4">
             <div class="flex flex-col gap-0.5">
-                <span class="text-sm font-medium"
-                    >{$_("app.status.autostart")}</span
-                >
-                <span class="text-xs text-slate-500 dark:text-slate-400"
+                <span class="m3-font-body-large">{$_("app.status.autostart")}</span>
+                <span class="m3-font-body-medium text-on-surface-variant"
                     >{$_("app.status.autostart_desc")}</span
                 >
             </div>
-            <button
-                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none p-1 {autostart
-                    ? 'bg-emerald-500'
-                    : 'bg-slate-200 dark:bg-slate-700'}"
-                role="switch"
-                aria-checked={autostart}
-                aria-label={$_("app.status.autostart")}
-                onclick={() => toggleSetting("autostart")}
+            <Switch
+                checked={autostart}
                 disabled={isSavingSettings}
-            >
-                <span
-                    class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out {autostart
-                        ? 'translate-x-5'
-                        : 'translate-x-0'}"
-                ></span>
-            </button>
-        </div>
+                onchange={() => toggleSetting("autostart")}
+            />
+        </label>
 
-        <!-- 卸载保留数据 -->
-        <div class="flex items-start justify-between">
+        <label class="flex items-center justify-between gap-4">
             <div class="flex flex-col gap-0.5">
-                <span class="text-sm font-medium"
-                    >{$_("app.status.keep_data")}</span
-                >
-                <span class="text-xs text-slate-500 dark:text-slate-400"
+                <span class="m3-font-body-large">{$_("app.status.keep_data")}</span>
+                <span class="m3-font-body-medium text-on-surface-variant"
                     >{$_("app.status.keep_data_desc")}</span
                 >
             </div>
-            <button
-                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none p-1 {keepData
-                    ? 'bg-emerald-500'
-                    : 'bg-slate-200 dark:bg-slate-700'}"
-                role="switch"
-                aria-checked={keepData}
-                aria-label={$_("app.status.keep_data")}
-                onclick={() => toggleSetting("keepData")}
+            <Switch
+                checked={keepData}
                 disabled={isSavingSettings}
-            >
-                <span
-                    class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out {keepData
-                        ? 'translate-x-5'
-                        : 'translate-x-0'}"
-                ></span>
-            </button>
-        </div>
+                onchange={() => toggleSetting("keepData")}
+            />
+        </label>
     </div>
-</div>
+</Card>

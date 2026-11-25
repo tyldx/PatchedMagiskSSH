@@ -1,4 +1,63 @@
 @import "tailwindcss";
+@import "./theme.css";
 
-/* Tailwind v4: dark: \u7531 html.dark \u63a7\u5236\uff08\u800c\u975e\u7cfb\u7edf\u5a92\u4f53\u67e5\u8be2\uff09 */
+@function --m3-density(--size) {
+  result: var(--size);
+}
+
+/* Tailwind v4: dark: 由 html.dark 控制（而非系统媒体查询） */
 @variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-surface: var(--m3c-surface);
+  --color-surface-container-low: var(--m3c-surface-container-low);
+  --color-surface-container: var(--m3c-surface-container);
+  --color-surface-container-high: var(--m3c-surface-container-high);
+  --color-surface-container-highest: var(--m3c-surface-container-highest);
+  --color-on-surface: var(--m3c-on-surface);
+  --color-on-surface-variant: var(--m3c-on-surface-variant);
+  --color-outline-variant: var(--m3c-outline-variant);
+  --color-primary: var(--m3c-primary);
+  --color-on-primary: var(--m3c-on-primary);
+  --color-primary-container: var(--m3c-primary-container);
+  --color-secondary-container: var(--m3c-secondary-container);
+  --color-on-secondary-container: var(--m3c-on-secondary-container);
+  --color-surface-container-lowest: var(--m3c-surface-container-lowest);
+  --color-outline: var(--m3c-outline);
+  --color-on-primary-container: var(--m3c-on-primary-container);
+  --color-error: var(--m3c-error);
+}
+
+html {
+  --m3v-bottom-offset: 5rem;
+}
+html:not(.dark) {
+  color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
+}
+
+@utility m3-font-title-large {
+  @apply --m3-title-large;
+}
+
+@utility m3-font-title-medium {
+  @apply --m3-title-medium;
+}
+
+@utility m3-font-title-small {
+  @apply --m3-title-small;
+}
+
+@utility m3-font-body-large {
+  @apply --m3-body-large;
+}
+
+@utility m3-font-body-medium {
+  @apply --m3-body-medium;
+}
+
+@utility m3-font-body-small {
+  @apply --m3-body-small;
+}

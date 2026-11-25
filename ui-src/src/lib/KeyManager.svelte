@@ -1,8 +1,21 @@
 <script lang="ts">
-    import { onMount } from "svelte";
     import { api, apiWithStdin } from "./ksu";
     import { _ } from "svelte-i18n";
-    import { Trash2, KeyRound, User, Users, Copy, Check } from "lucide-svelte";
+    import {
+        Button,
+        Card,
+        Icon,
+        ListItem,
+        Tabs,
+        TextFieldOutlined,
+        snackbar,
+    } from "m3-svelte";
+    import iconKey from "@ktibow/iconset-material-symbols/key-outline-rounded";
+    import iconCopy from "@ktibow/iconset-material-symbols/content-copy-outline-rounded";
+    import iconDelete from "@ktibow/iconset-material-symbols/delete-outline-rounded";
+    import iconAdd from "@ktibow/iconset-material-symbols/add-rounded";
+    import iconPerson from "@ktibow/iconset-material-symbols/person-outline-rounded";
+    import iconGroup from "@ktibow/iconset-material-symbols/group-outline-rounded";
 
     type User = "root" | "shell";
 
@@ -11,11 +24,10 @@
     let newKey = $state("");
     let isAdding = $state(false);
     let isLoading = $state(false);
-    let copiedIndex = $state<number | null>(null);
 
-    const users: { id: User; label: string }[] = [
-        { id: "root", label: "root" },
-        { id: "shell", label: "shell" },
+    const users = [
+        { name: "root", value: "root", icon: iconPerson },
+        { name: "shell", value: "shell", icon: iconGroup },
     ];
 
     // Reactive: current user's key list
@@ -41,13 +53,9 @@
         }
     }
 
-    async function switchUser(user: User) {
-        activeUser = user;
-        // Lazy load: only fetch if not yet loaded
-        if (keysByUser[user].length === 0) {
-            await loadKeys(user);
-        }
-    }
+    $effect(() => {
+        if (keysByUser[activeUser].length === 0) loadKeys(activeUser);
+    });
 
     async function addKey() {
         if (!newKey.trim()) return;
@@ -69,13 +77,10 @@
         );
     }
 
-    async function copyKey(key: string, index: number) {
+    async function copyKey(key: string) {
         try {
             await navigator.clipboard.writeText(key);
-            copiedIndex = index;
-            setTimeout(() => {
-                if (copiedIndex === index) copiedIndex = null;
-            }, 2000);
+            snackbar($_("app.auth.copied"));
         } catch (e) {
             console.error("Failed to copy", e);
         }
@@ -90,123 +95,70 @@
         }
         return { type: "Unknown", comment: "..." };
     }
-
-    onMount(() => loadKeys("root"));
 </script>
 
-<div
-    class="bg-white dark:bg-slate-900 shadow-sm rounded-xl p-6 border border-slate-200 dark:border-slate-800"
->
-    <!-- Header -->
-    <div class="flex items-center gap-2 mb-5">
-        <KeyRound class="w-5 h-5 text-indigo-500" />
-        <h2 class="text-lg font-semibold">{$_("app.auth.title")}</h2>
+<Card variant="filled">
+    <h2 class="m3-font-title-large mb-4">{$_("app.auth.title")}</h2>
+
+    <div class="-mx-4 mb-4">
+        <Tabs secondary items={users} bind:tab={activeUser} />
     </div>
 
-    <!-- User Tabs -->
-    <div class="flex gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg mb-5">
-        {#each users as u}
-            <button
-                onclick={() => switchUser(u.id)}
-                class="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-sm font-medium rounded-md transition-all {activeUser ===
-                u.id
-                    ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}"
-            >
-                {#if u.id === "root"}
-                    <User class="w-3.5 h-3.5" />
-                {:else}
-                    <Users class="w-3.5 h-3.5" />
-                {/if}
-                {u.label}
-            </button>
-        {/each}
-    </div>
-
-    <!-- Key list -->
-    <div class="space-y-3 mb-5 min-h-[3rem]">
+    <div class="rounded-xl bg-surface overflow-hidden mb-4 min-h-14">
         {#if isLoading}
-            <div
-                class="animate-pulse bg-slate-100 dark:bg-slate-800 h-12 rounded-lg w-full"
-            ></div>
+            <div class="h-18 animate-pulse"></div>
         {:else if keys.length === 0}
-            <p class="text-sm text-slate-500 italic py-3">
+            <p class="m3-font-body-medium text-on-surface-variant px-4 py-4">
                 {$_("app.auth.empty")}
             </p>
         {:else}
             {#each keys as key, index}
                 {@const parsed = parseKey(key)}
-                <div
-                    class="group flex items-center justify-between gap-2 sm:gap-4 p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg transition-all hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm"
-                >
-                    <button
-                        class="flex-1 min-w-0 text-left focus:outline-none flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 group/btn"
-                        title={key}
-                        onclick={() => copyKey(key, index)}
-                    >
-                        <span
-                            class="text-xs font-semibold px-2 py-0.5 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-md whitespace-nowrap w-fit"
-                        >
-                            {parsed.type}
-                        </span>
-                        <div class="flex items-center gap-2 min-w-0 flex-1">
-                            <span
-                                class="text-sm font-mono truncate text-slate-600 dark:text-slate-400 group-hover/btn:text-indigo-600 dark:group-hover/btn:text-indigo-400 transition-colors"
+                <ListItem headline={parsed.comment} supporting={parsed.type}>
+                    {#snippet leading()}
+                        <Icon icon={iconKey} size={24} />
+                    {/snippet}
+                    {#snippet trailing()}
+                        <div class="flex">
+                            <Button
+                                variant="text"
+                                iconType="full"
+                                title={$_("app.auth.copy")}
+                                onclick={() => copyKey(key)}
                             >
-                                {parsed.comment}
-                            </span>
-                            {#if copiedIndex === index}
-                                <span
-                                    class="text-xs text-emerald-500 animate-in fade-in duration-200 whitespace-nowrap"
-                                >
-                                    已复制！
-                                </span>
-                            {/if}
+                                <Icon icon={iconCopy} />
+                            </Button>
+                            <Button
+                                variant="text"
+                                iconType="full"
+                                title={$_("app.auth.btn_delete")}
+                                onclick={() => deleteKey(index)}
+                            >
+                                <Icon icon={iconDelete} />
+                            </Button>
                         </div>
-                    </button>
-                    <div class="flex items-center gap-1 shrink-0">
-                        <button
-                            onclick={() => copyKey(key, index)}
-                            class="p-2 transition-colors rounded-md {copiedIndex ===
-                            index
-                                ? 'text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10'
-                                : 'text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10'}"
-                            title="复制"
-                        >
-                            {#if copiedIndex === index}
-                                <Check class="w-4 h-4" />
-                            {:else}
-                                <Copy class="w-4 h-4" />
-                            {/if}
-                        </button>
-                        <button
-                            onclick={() => deleteKey(index)}
-                            class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-md transition-colors"
-                            title={$_("app.auth.btn_delete")}
-                        >
-                            <Trash2 class="w-4 h-4" />
-                        </button>
-                    </div>
-                </div>
+                    {/snippet}
+                </ListItem>
             {/each}
         {/if}
     </div>
 
-    <!-- Add key -->
-    <div class="flex gap-3">
-        <input
-            type="text"
+    <div class="flex flex-col gap-3">
+        <TextFieldOutlined
+            label={$_("app.auth.input_placeholder")}
             bind:value={newKey}
-            placeholder={$_("app.auth.input_placeholder")}
-            class="flex-1 px-4 py-2 text-sm bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            onkeydown={(e) => e.key === "Enter" && addKey()}
+            enter={addKey}
         />
-        <button
-            onclick={addKey}
-            disabled={isAdding || !newKey.trim()}
-            class="px-5 py-2 whitespace-nowrap bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-        >
-            {isAdding ? $_("app.auth.btn_adding") : $_("app.auth.btn_add")}
-        </button>
+        <div class="flex justify-end">
+            <Button
+                variant="filled"
+                iconType="left"
+                onclick={addKey}
+                disabled={isAdding || !newKey.trim()}
+            >
+                <Icon icon={iconAdd} />
+                {isAdding ? $_("app.auth.btn_adding") : $_("app.auth.btn_add")}
+            </Button>
+        </div>
     </div>
-</div>
+</Card>

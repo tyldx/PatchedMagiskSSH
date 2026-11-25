@@ -1,4 +1,5 @@
 import { mount } from 'svelte'
+import '../node_modules/m3-svelte/package/etc/styles.css'
 import './app.css'
 import './i18n'
 import App from './App.svelte'
